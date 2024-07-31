@@ -1,0 +1,43 @@
+﻿@page "/blogs"
+@rendermode InteractiveServer
+
+<PageTitle>All Blogs</PageTitle>
+<h3>All of blogs around the world!</h3>
+
+@if (isLoading)
+{
+    <p>Loading blogs...</p>
+}
+else
+{
+    <div class="d-flex flex-column mt-4" style="gap: 1rem;">
+        @foreach (Blog blog in blogs)
+        {
+            <Card Color="CardColor.Light" Style="width: 50rem;">
+                <CardHeader>@blog.Author</CardHeader>
+                <CardBody>
+                    <CardTitle>
+                        @blog.Name
+                    </CardTitle>
+                    <CardText>@blog.Description</CardText>
+                </CardBody>
+            </Card>
+        }
+    </div>
+}
+
+@using BlazorApp.Data
+@using BlazorApp.Models
+@using BlazorApp.Services
+
+@inject BlogService blogService;
+@code {
+    private List<Blog> blogs = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        blogs = await blogService.GetAllBlogs();
+        isLoading = false;
+    }
+}

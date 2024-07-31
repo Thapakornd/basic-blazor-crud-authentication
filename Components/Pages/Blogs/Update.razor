@@ -1,0 +1,58 @@
+﻿@page "/blogs/update/{blogId}"
+
+@rendermode InteractiveServer
+
+<h3>Update</h3>
+<div>
+    @if (isLoading)
+    {
+        <p>Loading blog...</p>
+    }
+    else
+    {
+        <EditForm Model="@blog" OnValidSubmit="Submit" FormName="update-blog" class="d-flex flex-column" style="gap: 1rem; width: 500px;">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label>Title</label>
+                <InputText class="form-control" @bind-Value="blog!.Name" />
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <InputTextArea class="form-control" @bind-Value="blog.Description" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    }
+</div>
+
+@using BlazorApp.Models
+@using BlazorApp.Services
+
+@inject BlogService blogService
+@inject NavigationManager navigationManager
+
+@code {
+    [Parameter]
+    public string? BlogId { get; set; }
+
+    private Blog? blog;
+    private bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        long blogId = Int64.Parse(BlogId!);
+        isLoading = true;
+        blog = await blogService.GetBlogByID(blogId!)!;
+        isLoading = false;
+    }
+
+    private async void Submit()
+    {
+
+        long blogId = Int64.Parse(BlogId!);
+        await blogService.UpdateBlogByID(blog!, blogId);
+        navigationManager.NavigateTo("/blogs/own");
+    }
+}

@@ -1,0 +1,68 @@
+﻿@page "/blogs/create"
+
+    <h3>Create blog</h3>
+
+    <StatusMessage Message="@errorMessage" />
+
+    @if (submitted)
+    {
+        <p>You already add new blog!</p>
+    }
+
+    <EditForm Model="@blog" OnValidSubmit="Submit" FormName="blog-create" class="d-flex flex-column" style="gap: 1rem; width: 500px;">
+        <DataAnnotationsValidator />
+
+        <div class="form-group">
+            <label>Title</label>
+            <InputText class="form-control" @bind-Value="blog!.Name" />
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <InputTextArea class="form-control" @bind-Value="blog!.Description" />
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+
+@using BlazorApp.Components.Account.Shared
+@using BlazorApp.Services
+@using BlazorApp.Models
+@using Microsoft.AspNetCore.Identity;
+@using BlazorApp.Data
+
+@inject BlogService blogService
+@inject IHttpContextAccessor contextAccessor
+@inject UserManager<ApplicationUser> userManager
+
+@code {
+    [SupplyParameterFromForm]
+    private Blog? blog { get; set; }
+
+    private bool submitted = false;
+    private bool isLoading;
+    private string? errorMessage;
+
+    protected override void OnInitialized() => blog ??= new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = contextAccessor.HttpContext;
+
+        if (context != null)
+        {
+            var user = await userManager.GetUserAsync(context.User);
+            blog!.Author = user?.UserName;
+            blog!.UserId = user?.Id;
+            System.Console.WriteLine(blog);
+        }
+    }
+
+    private async Task Submit()
+    {
+        await blogService.CreateBlog(blog!);
+        submitted = true;
+        blog!.Name = "";
+        blog!.Description = "";
+    }
+}

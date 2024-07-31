@@ -1,0 +1,65 @@
+﻿@page "/blogs/own"
+
+@rendermode InteractiveServer
+
+<h3>UserBlog</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex flex-column" style="gap: 1rem;">
+        @foreach (Blog blog in blogs)
+        {
+            <Card Color="CardColor.Light" Style="width: 50rem;">
+                <CardHeader>@blog.Author</CardHeader>
+                <CardBody>
+                    <CardTitle>@blog.Name</CardTitle>
+                    <CardText>
+                        @blog.Description
+                    </CardText>
+                </CardBody>
+                <CardBody>
+                    <a class="btn btn-success" href="/blogs/update/@blog.Id">Update</a>
+                    <Button @onclick="() => DeleteBlog(blog.Id)" Color="ButtonColor.Danger">Delete</Button>
+                </CardBody>
+            </Card>
+        }
+    </div>
+}
+
+@using BlazorApp.Services
+@using BlazorApp.Models
+@using Microsoft.AspNetCore.Identity;
+@using BlazorApp.Data
+
+@inject BlogService blogService
+@inject IHttpContextAccessor contextAccessor
+@inject UserManager<ApplicationUser> userManager
+@inject NavigationManager navigationManager
+@code {
+    private List<Blog> blogs = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = contextAccessor.HttpContext;
+
+        if (context != null)
+        {
+            var user = await userManager.GetUserAsync(context.User);
+            string? userId = user?.Id;
+
+            blogs = await blogService.GetAllBlogsByID(userId!);
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteBlog(long id)
+    {
+        await blogService.DeleteBlogByID(id);
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+}
